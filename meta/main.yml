@@ -1,0 +1,27 @@
+---
+galaxy_info:
+  role_name: TICKG_stack_docker
+  author: Bart Smeding <devops@bartsmeding.nl>
+  description: Ansible Role to install Telegraf, InfluxDB, Chronograf, Kapacitor and Grafana (TICK+G) as docker containers
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: Debian
+      versions:
+        - stretch
+        - buster
+    - name: Ubuntu
+      versions:
+        - trusty
+        - xenial
+  galaxy_tags:
+    - system
+    - telegraf
+    - influxdb
+    - kapacitor
+    - chronograf
+    - grafana
+    - monitoring
+    - snmp
+dependencies:
+    - docker

@@ -1,0 +1,57 @@
+
+#install
+- name: Check if chronograf group exist
+  group:
+    name: chronograf
+    gid: "{{ chronograf_uid }}"
+    system: true
+  become: true
+
+- name: Check if chronograf user exist
+  user:
+    name: chronograf
+    uid: "{{ chronograf_uid }}"
+    shell: /sbin/nologin
+    groups: chronograf
+    system: true
+    append: yes
+  become: true
+
+
+- name: Check chronograf config directory
+  file:
+    path: /var/lib/chronograf
+    state: directory
+    mode: '0744'
+    owner: chronograf
+    group: chronograf
+  become: true
+
+  
+- name: Run chronograf container
+  docker_container:
+    name: chronograf
+    image: "{{ docker_containers.chronograf.image }}"
+    user: "{{ chronograf_uid }}:{{ chronograf_uid }}"
+    state: started
+    restart: yes
+    restart_policy: "{{ docker_restart_policy }}"
+    links:
+      - influxdb:influxdb
+    privileged: false
+    purge_networks: no
+    published_ports:
+      - '{{ chronograf_listening_port }}:8888'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /var/lib/chronograf:/var/lib/chronograf
+    # env:
+    #   HOST_PROC=/host/proc
+    command:
+      - --influxdb-url=http://influxdb:8086
+    #   - --config-directory /etc/chronograf/chronograf.d
+  #become: true
+
+
+  # search paths for SNMP MIBS (/usr/share/mibs and /iana / ietf already in use):  //.snmp/mibs:/usr/share/snmp/mibs:/usr/share/snmp/mibs/iana:/usr/share/snmp/mibs/ietf:/usr/share/mibs/site:/usr/share/snmp/mibs:/usr/share/mibs/iana:/usr/share/mibs/ietf:/usr/share/mibs/netsnmp

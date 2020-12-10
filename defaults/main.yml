@@ -1,0 +1,56 @@
+---
+# defaults file for tigstack
+
+tig_stack_install_influx_on_host: false     # insstal influxdb-client on the host, can be handy for testing
+
+python_venv: ''
+tig_stack_pip_modules:
+  - influxdb
+  - docker
+influx_database_name: 'telegraf'
+influx_reinitialize_database: false     # when true, database script will be run
+influx_database_retention_policy:
+  name: 'one_week'
+  time: '168h'          # 168 hour = one week
+influx_admin_user: influxadmin
+influx_admin_password: influxpassword
+influx_user_telegraf: telegraf_user
+influx_user_telegraf_password: telegraf_pass
+influx_user_grafana: grafana_user
+influx_user_grafana_password: grafana_pass
+
+# UID
+telegraf_uid: 991
+influx_uid: 992
+grafana_uid: 993
+kapacitor_uid: 994
+chronograf_uid: 995
+
+# Kapacitor
+kapacitor_listening_port: 9092
+
+# Chronograf
+chronograf_listening_port: 8888
+
+# Telegraf
+telegraf_snmp_trap_port: 162               # Default port is 162, but that can
+telegraf_copy_mibs: true                   # Copy all MIB files shipped by this role to /usr/share/mibs/netsnmp on the target host
+#telegraf_influxdb_endpoint_ip: ''         # When using other influxdb IP rather than the localhost
+
+grafana_admin_user: admin
+grafana_admin_password: admin
+grafana_secret_key: grafana
+
+docker_restart_policy: always       # no, on-failure, always, unless-stopped https://docs.docker.com/config/containers/start-containers-automatically/
+docker_containers:
+  grafana:
+    image: grafana/grafana:7.1.3
+  influxdb:
+    image: influxdb:1.8.1
+  telegraf:
+    #image: telegraf:1.15.1
+    image: nuntz/telegraf-snmp:latest
+  kapacitor:
+    image: kapacitor:latest
+  chronograf:
+    image: chronograf:latest

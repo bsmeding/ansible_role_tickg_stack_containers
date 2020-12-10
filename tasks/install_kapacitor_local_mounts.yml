@@ -1,0 +1,65 @@
+
+#install
+- name: Check if kapacitor group exist
+  group:
+    name: kapacitor
+    gid: "{{ kapacitor_uid }}"
+    system: true
+  become: true
+
+- name: Check if kapacitor user exist
+  user:
+    name: kapacitor
+    uid: "{{ kapacitor_uid }}"
+    shell: /sbin/nologin
+    groups: kapacitor
+    system: true
+    append: yes
+  become: true
+
+- name: Check if config file exist
+  stat:
+    path: /etc/kapacitor/kapacitor.conf
+  register: kapacitor_config_file
+
+- name: Create config file
+  shell: 'docker run --rm kapacitor kapacitor config | tee /etc/kapacitor/kapacitor.conf &lt; /dev/null'
+  when: not kapacitor_config_file.stat.exists
+  become: true
+
+
+- name: Check kapacitor config file rights
+  file:
+    path: /etc/kapacitor/kapacitor.conf
+    mode: '0744'
+    owner: kapacitor
+    group: kapacitor
+  become: true
+
+- name: Run kapacitor container
+  docker_container:
+    name: kapacitor
+    image: "{{ docker_containers.kapacitor.image }}"
+    user: "{{ kapacitor_uid }}:{{ kapacitor_uid }}"
+    state: started
+    restart: yes
+    restart_policy: "{{ docker_restart_policy }}"
+    links:
+      - influxdb:influxdb
+    privileged: false
+    purge_networks: no
+    published_ports:
+      - '{{ kapacitor_listening_port }}:9092'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /etc/kapacitor/kapacitor.conf:/etc/kapacitor/kapacitor.conf:ro
+    env:
+      KAPACITOR_INFLUXDB_0_URLS_0=http://influxdb:8086
+    # command:
+    #   - --config /etc/kapacitor/kapacitor.conf
+    #   - --config-directory /etc/kapacitor/kapacitor.d
+  #become: true
+
+
+  # search paths for SNMP MIBS (/usr/share/mibs and /iana / ietf already in use):  //.snmp/mibs:/usr/share/snmp/mibs:/usr/share/snmp/mibs/iana:/usr/share/snmp/mibs/ietf:/usr/share/mibs/site:/usr/share/snmp/mibs:/usr/share/mibs/iana:/usr/share/mibs/ietf:/usr/share/mibs/netsnmp

@@ -1,0 +1,187 @@
+
+#install
+- name: Check if influxdb group exist
+  group:
+    name: influxdb
+    gid: 991
+    system: true
+  become: true
+
+- name: Check if influxdb user exist
+  user:
+    name: influxdb
+    uid: 991
+    shell: /sbin/nologin
+    groups: influxdb
+    system: true
+    append: yes
+  become: true
+
+- name: Check influx config directory
+  file:
+    path: /etc/influxdb
+    state: directory
+    mode: '0744'
+    owner: influxdb
+    group: influxdb
+  become: true
+
+- name: install pip modules venv
+  pip:
+    name: "{{ tig_stack_pip_modules }}"
+    virtualenv: "{{ python_venv }}"
+    virtualenv_site_packages: yes
+  when: python_venv is defined and python_venv|length>3
+  become: true
+
+- name: install pip modules machine
+  pip:
+    name: "{{ tig_stack_pip_modules }}"
+  when: python_venv is undefined or python_venv|length<4
+  become: true
+
+- name: install influx client
+  apt:
+    name: influxdb-client
+    state: present
+  when: tig_stack_install_influx_on_host|bool
+  become: true
+  ignore_errors: true
+
+- name: Check if config file exist
+  stat:
+    path: /etc/influxdb/influxdb.conf
+  register: influxdb_config_file
+
+- name: Create config file
+  shell: 'docker run --rm influxdb influxd config | tee /etc/influxdb/influxdb.conf > /dev/null'
+  when: not influxdb_config_file.stat.exists
+  become: true
+
+- name: Set influx config directory permissions
+  file:
+    path: /etc/influxdb
+    state: directory
+    mode: 'u=rwX,g=r,o=r'
+    owner: influxdb
+    group: influxdb
+    recurse: true
+  become: true
+  when: not influxdb_config_file.stat.exists
+
+- name: Check influx lib directory
+  file:
+    path: /var/lib/influxdb
+    state: directory
+    mode: 'u=rwX,g=rX,o=rX'
+    owner: influxdb
+    group: influxdb
+  become: true
+
+- name: Check if influxdb directory file
+  find:
+    paths: /var/lib/influxdb
+    file_type: directory
+    patterns: "*.*"
+  register: influxdbdir_files
+
+- name: Check influx script directory if lib is empty or force recreate
+  file:
+    path: /etc/influxdb/scripts
+    state: directory
+    mode: 'u=rwX,g=rX,o=rX'
+    owner: influxdb
+    group: influxdb
+  become: true
+  when: influxdbdir_files.matched|int == 0
+
+- name: Copy SQL init script
+  template:
+    src: influxdb/influxdb-init.iql.j2
+    dest: /etc/influxdb/scripts/influxdb-init.iql
+    mode: 'u=rwX,g=rX,o=rX'
+    owner: influxdb
+    group: influxdb
+  register: influxdb_init_script
+
+- name: Set database retention
+  shell: 'docker run --rm -e INFLUXDB_HTTP_AUTH_ENABLED=true \
+         -e INFLUXDB_ADMIN_USER={{ influx_admin_user }} \
+         -e INFLUXDB_ADMIN_PASSWORD={{ influx_admin_password }} \
+         -v /var/lib/influxdb:/var/lib/influxdb \
+         -v /etc/influxdb/scripts:/docker-entrypoint-initdb.d \
+         influxdb /init-influxdb.sh > /dev/null'
+  when: influxdb_init_script.changed or influx_reinitialize_database|bool
+
+- name: Set influx data directory permissions
+  file:
+    path: /var/lib/influxdb
+    state: directory
+    mode: 'u=rwX,g=rw,o=r'
+    owner: influxdb
+    group: influxdb
+    recurse: true
+  become: true
+
+- name: Run InfluxDB container
+  docker_container:
+    name: influxdb
+    image: "{{ docker_containers.influxdb.image }}"
+    user: 991:991
+    state: started
+    restart: yes
+    restart_policy: "{{ docker_restart_policy }}"
+    privileged: false
+    purge_networks: no
+    published_ports:
+        - 8086:8086
+#        - 8083:8083
+    volumes:
+      - /etc/influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
+      - /var/lib/influxdb:/var/lib/influxdb
+    env:
+        INFLUXDB_DB: "{{ influx_database_name }}"
+        INFLUXDB_ADMIN_USER: "{{ influx_admin_user }}"
+        INFLUXDB_ADMIN_PASSWORD: "{{ influx_admin_password }}"
+        INFLUXDB_HTTP_AUTH_ENABLED: "true"
+
+- name: Create influx user for Telegraf
+  influxdb_user:
+    user_name: "{{ influx_user_telegraf }}"
+    user_password: "{{ influx_user_telegraf_password }}"
+    admin: no
+    login_username: "{{ influx_admin_user }}"
+    login_password: "{{ influx_admin_password }}"
+    validate_certs: false
+    grants:
+      - database: "{{ influx_database_name }}"
+        privilege: 'WRITE'
+  ignore_errors: true
+  register: add_user_telegraf
+
+- name: Create influx user for Grafana
+  influxdb_user:
+    user_name: "{{ influx_user_grafana }}"
+    user_password: "{{ influx_user_grafana_password }}"
+    admin: no
+    login_username: "{{ influx_admin_user }}"
+    login_password: "{{ influx_admin_password }}"
+    validate_certs: false
+    grants:
+      - database: "{{ influx_database_name }}"
+        privilege: 'READ'
+  ignore_errors: true
+  register: add_user_grafana
+
+- name: Create SQL file for adding the users
+  template:
+    src: influxdb/add_users_to_influx.j2
+    dest: /tmp/add_users_to_influx.iql
+    mode: 'u=rwX,g=rX,o=rX'
+    owner: influxdb
+    group: influxdb
+  when: add_user_grafana.failed or add_user_telegraf.failed
+
+- debug:
+    msg: "Could not create users, please use script /tmp/add_users_to_influx.iql to add user account for Grafana and Telegraf  to influxDB"
+  when: add_user_grafana.failed or add_user_telegraf.failed
