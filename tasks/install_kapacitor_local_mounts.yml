@@ -74,7 +74,6 @@
     restart_policy: "{{ docker_restart_policy }}"
     links:
       - influxdb:influxdb
-      - chronograf:chronograf
     privileged: false
     purge_networks: no
     published_ports:
