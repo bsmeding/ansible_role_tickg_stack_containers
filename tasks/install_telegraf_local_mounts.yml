@@ -87,8 +87,6 @@
     state: started
     restart: yes
     restart_policy: "{{ docker_restart_policy }}"
-    links:
-      - influxdb:influxdb
     privileged: false
     purge_networks: no
     network_mode: host
