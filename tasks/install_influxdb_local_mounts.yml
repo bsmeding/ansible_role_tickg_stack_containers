@@ -178,7 +178,7 @@
   influxdb_user:
     user_name: "{{ influx_user_kapacitor }}"
     user_password: "{{ influx_user_kapacitor_password }}"
-    admin: no
+    admin: yes
     login_username: "{{ influx_admin_user }}"
     login_password: "{{ influx_admin_password }}"
     validate_certs: false
