@@ -23,5 +23,4 @@ galaxy_info:
     - grafana
     - monitoring
     - snmp
-dependencies:
-    - docker
+dependencies: []
