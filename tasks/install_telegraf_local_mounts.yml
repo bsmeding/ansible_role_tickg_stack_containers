@@ -93,6 +93,9 @@
     purge_networks: no
     published_ports:
       - '{{ telegraf_snmp_trap_port }}:1062/udp'
+      - 57000:57000
+      - 58000:58000
+      - 6514:6514
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/host/proc:ro
