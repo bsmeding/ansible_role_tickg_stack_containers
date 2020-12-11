@@ -45,6 +45,16 @@
   when: not kapacitor_config_file.stat.exists
   become: true
 
+## CHECK CONFIG FILE:
+# [[influxdb]]
+#   enabled = true
+#   name = "default"
+#   default = false
+#   urls = ["http://localhost:8086"]
+#   username = "kapacitor_user"
+#   password = "kapacitor_pass"
+#   ssl-ca = ""
+#   ssl-cert = ""
 
 - name: Check kapacitor config file rights
   file:

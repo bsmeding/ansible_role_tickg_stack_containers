@@ -184,7 +184,7 @@
     validate_certs: false
     grants:
       - database: "{{ influx_database_name }}"
-        privilege: 'WRITE'
+        privilege: 'READ'
   ignore_errors: true
   register: add_user_telegraf
 
