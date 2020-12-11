@@ -18,6 +18,8 @@ influx_user_telegraf: telegraf_user
 influx_user_telegraf_password: telegraf_pass
 influx_user_grafana: grafana_user
 influx_user_grafana_password: grafana_pass
+influx_user_kapacitor: kapacitor_user
+influx_user_kapacitor_password: kapacitor_pass
 
 # UID
 telegraf_uid: 991

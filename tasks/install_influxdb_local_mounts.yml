@@ -173,6 +173,21 @@
   ignore_errors: true
   register: add_user_grafana
 
+
+- name: Create influx user for Kapacitor
+  influxdb_user:
+    user_name: "{{ influx_user_kapacitor }}"
+    user_password: "{{ influx_user_kapacitor_password }}"
+    admin: no
+    login_username: "{{ influx_admin_user }}"
+    login_password: "{{ influx_admin_password }}"
+    validate_certs: false
+    grants:
+      - database: "{{ influx_database_name }}"
+        privilege: 'WRITE'
+  ignore_errors: true
+  register: add_user_telegraf
+
 - name: Create SQL file for adding the users
   template:
     src: influxdb/add_users_to_influx.j2
