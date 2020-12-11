@@ -24,3 +24,5 @@ galaxy_info:
     - monitoring
     - snmp
 dependencies: []
+  # - geerlingguy.pip
+  # - geerlingguy.docker
