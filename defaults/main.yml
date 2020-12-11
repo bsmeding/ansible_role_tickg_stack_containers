@@ -35,7 +35,7 @@ chronograf_listening_port: 8888
 # Telegraf
 telegraf_snmp_trap_port: 162               # Default port is 162, but that can
 telegraf_copy_mibs: true                   # Copy all MIB files shipped by this role to /usr/share/mibs/netsnmp on the target host
-#telegraf_influxdb_endpoint_ip: ''         # When using other influxdb IP rather than the localhost
+telegraf_influxdb_endpoint: influxdb         # When using other influxdb IP rather than the localhost
 
 grafana_admin_user: admin
 grafana_admin_password: admin

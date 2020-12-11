@@ -5,7 +5,7 @@
 ## urls will be written to each interval.
 # urls = ["unix:///var/run/influxdb.sock"]
 # urls = ["udp://127.0.0.1:8089"]
-urls = ["http://{{ telegraf_influxdb_endpoint_ip | default(ansible_default_ipv4.address)}}:8086"]
+urls = ["http://{{ telegraf_influxdb_endpoint | default(ansible_default_ipv4.address)}}:8086"]
 
 ## The target database for metrics; will be created as needed.
 ## For UDP url endpoint database needs to be configured on server side.
