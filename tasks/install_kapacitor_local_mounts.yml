@@ -32,7 +32,7 @@
   register: kapacitor_config_file
 
 - name: Create config file
-  shell: 'docker run --rm kapacitor kapacitord config | tee /etc/kapacitor/kapacitor.conf &lt; /dev/null'
+  shell: 'docker run --rm kapacitor kapacitord config | tee /etc/kapacitor/kapacitor.conf > /dev/null'
   when: not kapacitor_config_file.stat.exists
   become: true
 
