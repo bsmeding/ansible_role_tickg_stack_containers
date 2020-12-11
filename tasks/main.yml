@@ -1,10 +1,10 @@
 ---
 # tasks file for tigstack
-- name: Include tasks for Telegraf
-  include_tasks: install_telegraf_local_mounts.yml
-
 - name: Include tasks for InfluxDB
   include_tasks: install_influxdb_local_mounts.yml
+
+- name: Include tasks for Telegraf
+  include_tasks: install_telegraf_local_mounts.yml
 
 - name: Include tasks for Chronograf
   include_tasks: install_chronograf_local_mounts.yml
