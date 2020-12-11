@@ -17,6 +17,15 @@
     append: yes
   become: true
 
+- name: Check kapacitor config directory
+  file:
+    path: /etc/kapacitor
+    state: directory
+    mode: '0744'
+    owner: kapacitor
+    group: kapacitor
+  become: true
+
 - name: Check if config file exist
   stat:
     path: /etc/kapacitor/kapacitor.conf
