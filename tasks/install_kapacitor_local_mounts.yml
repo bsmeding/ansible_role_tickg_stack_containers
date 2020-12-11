@@ -26,6 +26,15 @@
     group: kapacitor
   become: true
 
+- name: Check kapacitor data directory
+  file:
+    path: /var/lib/kapacitor
+    state: directory
+    mode: '0744'
+    owner: kapacitor
+    group: kapacitor
+  become: true
+
 - name: Check if config file exist
   stat:
     path: /etc/kapacitor/kapacitor.conf
@@ -63,6 +72,7 @@
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/host/proc:ro
       - /etc/kapacitor/kapacitor.conf:/etc/kapacitor/kapacitor.conf:ro
+      - /var/lib/kapacitor:/var/lib/kapacitor
     env:
       KAPACITOR_INFLUXDB_0_URLS_0=http://influxdb:8086
     # command:
